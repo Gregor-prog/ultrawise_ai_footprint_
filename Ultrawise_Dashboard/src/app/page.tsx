@@ -31,15 +31,22 @@ export default function DashboardPage() {
   const [volumeFlowRate, setrate] = useState(0)
   
 
+  // should be gotten from the backend, we are using dummy data for now
   let ultrasonicHeight = 100
 
   setInterval(() => {
-    let waterLevel = waterLevelCalculate(ultrasonicHeight,radius,height,volume)
+    if(waterLevel == 0){
+      let waterLevel = waterLevelCalculate(ultrasonicHeight,radius,height,volume)
     setwaterlevel(waterLevel)
+    }
+    if(volumeConsumed == 0){
     let volumeCons : any = consumption(radius)
     setConsumed(volumeCons)
+    }
+    if(volumeFlowRate == 0){
     let flowRateRe : any = flowRate(radius)
     setrate(flowRateRe)
+    }
   }, 10000)
 
   useEffect(() => {

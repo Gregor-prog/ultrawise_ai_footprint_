@@ -15,7 +15,7 @@ export const consumption = (radius: any) => {
     // gotten from backend
     let soc = [1,2,3,4,5]
     if(soc.length == 0) return null
-    let result = [soc[1]]
+    let result = [soc[0]]
     for (let i = 1;i<soc.length;i+=1){
         let diff = soc[1] - soc[0]
         result.push(diff)
@@ -28,7 +28,7 @@ export const consumption = (radius: any) => {
 export const flowRate = (radius:any) => {
     let data = [1,2,3,4,5]
     if(data.length == 0) return null
-    let result = [data[1]]
+    let result = [data[0]]
     for (let i = 1;i<data.length;i+=1){
         let diff = data[1] - data[0]
         result.push(diff)
