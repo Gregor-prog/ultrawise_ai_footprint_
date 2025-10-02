@@ -1,48 +1,12 @@
-// import mqtt from "mqtt";
-// import nodeCron from "node-cron";
-// import ultraSonic from "../src/schema/footprint.schema";
-
-// export const mqttServer = () => {
-//     console.log("...running")
-//      const client = mqtt.connect("mqtts://b890de781a384ca5974549b128d23408.s1.eu.hivemq.cloud:8883",{
-//             username:"Ultrawise",
-//             password:"Ultrawise001"
-//     })
-
-//     client.on("error", (error) => {
-//             console.log("didn't connect")
-//             console.log(error)
-//         })
-//         client.on("connect",() => {
-//             console.log("connected to MQTT")
-//             client.subscribe("data_center/sensor/001")
-//         })
-
-//     nodeCron.schedule("0 * * * *", async () => {
-//         console.log("fetching MQTT data...")
-//          client.on("message", async (topic,message) => {
-//             console.log("message successfully gotten")
-//             console.log(message)
-//             try {
-//                 const payLoad = JSON.parse(message.toString())
-//                 const db = await ultraSonic.create({
-//                  height: payLoad.height,
-//                 Timestamp: new Date(payLoad.Timestamp),
-//                 })
-//                 console.log(db)
-//             } catch (error) {
-//                 if(error){
-//                     console.log(error)
-//                     console.log('an error occured, couldnt run cron job')
-//                 }
-//             }
-//         })
-//     })
-// }
-
 import mqtt from "mqtt";
 import nodeCron from "node-cron";
 import ultraSonic from "../src/schema/footprint.schema";
+import consumptionSchema from "../src/schema/consumption.schema";
+import tankSchema_ from "../src/schema/tankDimension.schema";
+
+interface response {
+    height: number
+}
 
 // 1. Storage for the messages received during the hour
 const messageBuffer : any[] = [];
@@ -122,4 +86,29 @@ export const mqttServer = () => {
         messageBuffer.length = 0; 
         console.log("Buffer cleared. Ready for next hour.");
     });
+}
+
+export const storeConsumption = () => {
+        try {
+                nodeCron.schedule("0 0 * * *", async () => {
+                // fetch radius from database
+                const [rr] : any = await tankSchema_.find().select("radius")
+                const radius = rr.tankRadius
+                
+                // fetch heights from database
+                const heights : any  = await ultraSonic.find().select('height')
+                if(heights.length == 0){return}
+                let result = [heights[0]?.height]
+
+                    for (let i = 1;i<heights.length;i+=1){
+                        let diff = heights[1]?.height - heights[0]?.height
+                        result.push(diff)
+                    }
+                    let total = result.reduce((a,b) => a + b,0)
+                    let volumeConsumed = Math.PI * Math.pow(radius,2) * total
+                    const uploadVolume = await consumptionSchema.insertOne({waterConsumedDay:volumeConsumed})
+                })
+        } catch (error) {
+    
+        }       
 }
